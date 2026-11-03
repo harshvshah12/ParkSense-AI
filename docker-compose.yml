@@ -1,0 +1,50 @@
+version: "3.9"
+
+# ── ParkSense AI — Docker Compose ─────────────────────────────────────────────
+# Usage:
+#   docker compose up --build       # Start all services
+#   docker compose up -d            # Detached mode
+#   docker compose logs -f backend  # Follow backend logs
+
+services:
+  # ── FastAPI Backend ──────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: parksense_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist uploads and outputs across restarts
+      - parksense_uploads:/app/uploads
+      - parksense_outputs:/app/outputs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  # ── Next.js Frontend ─────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: parksense_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  parksense_uploads:
+  parksense_outputs:

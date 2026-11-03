@@ -1,0 +1,77 @@
+# ── Python & Environments ────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+.venv_fresh/
+backend/.venv/
+env/
+venv/
+ENV/
+
+# ── Machine Learning Weights & Runs (Auto-downloaded by Ultralytics) ───────────
+*.pt
+*.onnx
+*.engine
+*.weights
+runs/
+yolov8n.pt
+yolov8s.pt
+yolov8m.pt
+yolov8l.pt
+yolov8x.pt
+
+# ── Node & Next.js ─────────────────────────────────────────────────────────────
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+.next/
+out/
+build/
+.npm
+.eslintcache
+
+# ── Runtime & Uploads ──────────────────────────────────────────────────────────
+backend/tmp/
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/outputs/annotated/*
+!backend/outputs/annotated/.gitkeep
+backend/outputs/heatmaps/*
+!backend/outputs/heatmaps/.gitkeep
+
+# ── Environment & Secrets ──────────────────────────────────────────────────────
+.env
+.env*.local
+
+# ── Editor & OS ────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log

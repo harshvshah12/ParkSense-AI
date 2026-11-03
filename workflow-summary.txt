@@ -1,0 +1,123 @@
+Project: Parking Space Detection (ParkSense)
+Date: April 1, 2026
+
+=== Workflow with file mapping ===
+
+1) User opens frontend
+   - URL: http://localhost:3000
+   - file: frontend/src/app/page.tsx (entry UI), frontend/src/components/UploadZone.tsx
+
+2) User drops/uploads image/video
+   - component: frontend/src/components/UploadZone.tsx
+   - on file selected -> calls frontend/src/lib/api.ts -> uploadFile()
+
+3) Frontend upload API
+   - file: frontend/src/lib/api.ts
+   - endpoint: POST http://localhost:8000/upload
+
+4) Backend upload route (FastAPI)
+   - file: backend/main.py endpoint @app.post('/upload')
+   - does: validate mime, save upload to backend/uploads/jid.ext
+   - sets job_store[job_id] status queued
+   - background task: _process_job(job_id, file_path, media_type)
+
+5) Start background process
+   - file: backend/main.py function _process_job
+   - if image -> app.state.image_proc.process(file_path, job_id)
+   - if video -> app.state.video_proc.process(...)
+
+6) Model loading (startup)
+   - file: backend/main.py in lifespan() sets up model instances
+   - loads:
+        ParkingDetector (backend/models/detector.py),
+        SpaceEstimator (backend/models/space_estimator.py),
+        HeatmapGenerator (backend/utils/heatmap.py),
+        ImageProcessor/VideoProcessor (backend/utils)
+
+7) Object detection pipeline (image flow)
+   - file: backend/utils/image_processor.py -> process()
+   - loads image with cv2.imread -> scale to max dim
+   - detection: ParkingDetector.detect(image)
+   - estimation: SpaceEstimator.estimate(detections, image_shape)
+   - annotation: ParkingDetector.draw_detections(image, detections)
+   - heatmap: HeatmapGenerator.generate(...)
+   - save outputs:
+        outputs/annotated/{jobid}_annotated.jpg
+        outputs/heatmaps/{jobid}_heatmap.jpg
+   - encode base64 for inline return
+   - returns structured JSON result (vehicles, capacity, regions, urls)
+
+8) Video processing pipeline (video flow)
+   - file: backend/utils/video_processor.py -> process()
+   - sample frames by interval, run image pipeline per frame, accumulate results
+   - same output structure plus video-specific metadata
+
+9) Logging progress and status
+   - _process_job updates job_store[job_id]['progress']
+   - after completion status completed, result stored
+   - on error status failed
+
+10) Client polling job status
+    - file: frontend/src/lib/api.ts, function pollJob(jobId, onProgress)
+    - backend endpoint @app.get('/analyze/{job_id}') in backend/main.py
+    - returns status/progress + result when completed
+
+11) UI result rendering
+    - file: frontend/src/components/ResultsPanel.tsx
+    - receives result and shows occupancy cards, annotated image, heatmap, chart
+    - stats: frontend/src/components/StatsCards.tsx, OccupancyChart.tsx
+
+12) Static asset serving
+    - file: backend/main.py app.mount('/outputs', StaticFiles(directory='outputs'))
+    - allows frontend to fetch annotated+heatmap via URL from result
+
+=== Visual-style flow (ASCII) ===
+
+[frontend browser]
+      |
+      | POST /upload (API)
+      v
+[backend/main.py POST /upload] + save file -> queue + start background
+      |
+      +---> async job -> _process_job -> ImageProcessor/VideoProcessor
+                            |       |
+                            |       +--> ParkingDetector (yolov8n.pt)
+                            |       +--> SpaceEstimator
+                            |       +--> HeatmapGenerator
+                            |       +--> write outputs files
+                            v
+                job_store[job_id] = completed + result
+
+      |
+      | poll /analyze/{job_id}
+      v
+[backend/main.py GET /analyze/{job_id}] returns status/result
+      |
+      v
+[frontend display via ResultsPanel]
+
+=== Key files at a glance ===
+- backend/main.py
+- backend/models/detector.py
+- backend/models/space_estimator.py
+- backend/utils/image_processor.py
+- backend/utils/video_processor.py
+- backend/utils/heatmap.py
+- backend/routers/results.py
+- frontend/src/lib/api.ts
+- frontend/src/components/UploadZone.tsx
+- frontend/src/components/ProcessingIndicator.tsx
+- frontend/src/components/ResultsPanel.tsx
+- frontend/src/components/StatsCards.tsx
+- frontend/src/components/OccupancyChart.tsx
+- docker-compose.yml
+- backend/Dockerfile
+- frontend/Dockerfile
+
+=== One line run command (same as before) ===
+cd backend && e:\parking-detection\.venv_fresh\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+
+cd frontend && npm run dev
+
+=== Model file location ===
+- backend/yolov8n.pt (downloaded by ultralytics or preloaded by Dockerfile)

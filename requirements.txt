@@ -1,0 +1,12 @@
+# ParkSense AI — Top-Level Python Requirements
+# Mirrors backend/requirements.txt for ease of installation
+
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.1
+python-multipart>=0.0.9
+aiofiles>=23.2.1
+ultralytics>=8.2.27
+opencv-python-headless>=4.9.0.80
+numpy>=1.26.0,<2.0.0
+Pillow>=10.3.0
+httpx>=0.27.0

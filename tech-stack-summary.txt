@@ -1,0 +1,89 @@
+Project: Parking Space Detection (ParkSense)
+Date: April 1, 2026
+
+=== 1. Overview ===
+This project is a full stack web application for AI-powered parking lot analysis:
+- FastAPI backend processes image/video with YOLOv8 + parking-space estimation
+- Next.js frontend uploads media and displays progress/results
+- Docker compose config provided
+
+=== 2. Tech stack (why used + location) ===
+
+1. Python 3.x
+   - used in: backend/ (all Python modules)
+   - reason: rich ML/CV ecosystem, async, developer agility
+
+2. FastAPI
+   - used in: backend/main.py, backend/routers/results.py
+   - reason: high-performance API, async endpoints, built-in docs, validation
+
+3. Uvicorn
+   - used in: backend/Dockerfile (CMD uvicorn main:app ...), local run command
+   - reason: ASGI server to run FastAPI
+
+4. ultralytics YOLOv8 + torch
+   - used in: backend/models/detector.py
+   - reason: modern object detection (car/bus/truck/moto), pre-trained model; very simple API
+
+5. OpenCV (opencv-python-headless) + numpy
+   - used in: backend/utils/image_processor.py, backend/utils/video_processor.py, backend/models/detector.py
+   - reason: image read/resize/draw, video frame processing, fast array operations
+
+6. BackgroundTasks (FastAPI) / async tasks
+   - used in: backend/main.py (_process_job, upload_file)
+   - reason: handle long CV processing without blocking request response, pollable job API
+
+7. StaticFiles (fastapi)
+   - used in: backend/main.py (app.mount('/outputs', ...))
+   - reason: serve generated annotated/heatmap images
+
+8. React + Next.js
+   - used in: frontend/src/**/*, frontend/package.json
+   - reason: modern frontend with server-side rendering, SPA features, fast development
+
+9. State and UI control
+   - `UploadZone.tsx`, `ProcessingIndicator.tsx`, `ResultsPanel.tsx`, `OccupancyChart.tsx` etc.
+   - reason: UX for file drop, progress, results, charts
+
+10. API wrapper
+    - used in: frontend/src/lib/api.ts
+    - reason: upload + polling flow; abstracts backend URL via NEXT_PUBLIC_API_URL
+
+11. Tailwind CSS
+    - used in: frontend/tailwind.config.js, global stylings in src/app/globals.css
+    - reason: utility-first styling and design consistency
+
+12. Docker + docker-compose
+    - used in: Dockerfile (backend), frontend/Dockerfile, docker-compose.yml
+    - reason: containerized local deployment and isolated services (backend+frontend)
+
+13. Work directories + outputs
+    - used in: backend/main.py, backend/utils, storage: uploads, outputs/annotated, outputs/heatmaps
+    - reason: persisted input/output media across job executions
+
+=== 3. End-to-end workflow summary ===
+1) User has frontend at http://localhost:3000
+2) Upload in UploadZone triggers api.uploadFile(file)
+3) backend /upload saves file, creates job_id, starts _process_job in background
+4) pollJob() repeatedly GET /analyze/{job_id}
+5) _process_job uses ImageProcessor or VideoProcessor to detect, estimate, generate images+heatmap
+6) job status eventually completed, frontend renders results
+
+=== 4. Commands for running ===
+- backend: `cd backend && e:\parking-detection\.venv_fresh\Scripts\python.exe -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload`
+- frontend: `cd frontend && npm run dev`
+- health check: `curl http://127.0.0.1:8000/health`
+- upload/poll test (one line):
+  You can run from project root:
+
+  cd backend; python -c "import httpx,pathlib,time; f=pathlib.Path('tmp/test.jpg'); r=httpx.post('http://127.0.0.1:8000/upload', files={'file':('test.jpg', f.read_bytes(), 'image/jpeg')}, timeout=120); jid=r.json()['job_id']; print('job',jid); 
+for i in range(120):
+    time.sleep(1)
+    s=httpx.get(f'http://127.0.0.1:8000/analyze/{jid}', timeout=120).json()
+    print(i+1,s['status'],s.get('progress'))
+    if s['status'] in ('completed','failed'): print('done',s); break"
+
+=== 5. Notes ===
+- In environments with PyTorch 2.6+, if checkpoint loading has `weights_only` security restriction, adjust `detector.py` to allow appropriate safe globals or manual fallback as done in triage.
+- Docker on Windows may not be installed; run native commands as above for local debugging.
+
