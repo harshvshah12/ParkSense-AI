@@ -4,9 +4,11 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111.0-009688.svg)](https://fastapi.tiangolo.com/)
 [![Next.js 14](https://img.shields.io/badge/Next.js-14.2-black.svg)](https://nextjs.org/)
 [![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-00FFFF.svg)](https://ultralytics.com/)
+[![Vercel Live](https://img.shields.io/badge/Vercel-Live%20Production-black?logo=vercel)](https://frontend-six-steel-948mxn5ji1.vercel.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Author](https://img.shields.io/badge/Author-Harsh%20Shah-blueviolet.svg)](https://github.com/harshvshah12)
 
+> 🌐 **Live Web Application:** [frontend-six-steel-948mxn5ji1.vercel.app](https://frontend-six-steel-948mxn5ji1.vercel.app)  
 > AI-powered parking lot analysis using **YOLOv8** + **OpenCV** + **FastAPI** + **Next.js 14** + **Tailwind CSS**
 
 ---
