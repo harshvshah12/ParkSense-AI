@@ -11,6 +11,24 @@
 
 ---
 
+## 📸 Playwright Verification & Dashboard Previews
+
+### 1. Next.js 14 Bento Dashboard (Playwright Capture)
+*Production dark-slate UI (`#0D1117`) with drag-and-drop media uploader, dynamic progress indicators, and status metrics.*
+
+![ParkSense Next.js 14 Bento Dashboard](docs/screenshots/playwright_parksense_dashboard.png)
+
+---
+
+### 2. YOLOv8 Vehicle Detection & Spatial Heatmap Engine
+*Side-by-side detection bounding boxes and connected-component spatial occupancy heatmap.*
+
+| YOLOv8 Object Detection & Bounding Boxes | OpenCV Spatial Density Heatmap Overlay |
+| :---: | :---: |
+| ![YOLOv8 Detection](docs/screenshots/parksense_yolo_detection.jpg) | ![Spatial Heatmap](docs/screenshots/parksense_spatial_heatmap.jpg) |
+
+---
+
 ## 🎯 What It Does
 
 Upload a photo or video of any parking lot and ParkSense AI will:
